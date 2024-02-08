@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>IP Lookup</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      #result {
+        margin-top: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>IP Lookup</h1>
+    <input type="text" id="ip" placeholder="Enter IP Address or Domain" />
+    <button onclick="lookup()">IP Lookup</button>
+    <button onclick="lookupMX()">MX Lookup</button>
+    <div id="result"></div>
+
+    <script>
+      async function lookup() {
+        const ip = document.getElementById("ip").value;
+        const url = `http://localhost:3000/ipqualityscore?ip=${ip}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const abuseIPDBUrl = `http://localhost:3000/abuseipdb?ip=${ip}`;
+        const abuseResponse = await fetch(abuseIPDBUrl);
+        const abuseData = await abuseResponse.json();
+
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = `
+            <p>Country: ${data.country_code}</p>
+            <p>Fraud Score: ${data.fraud_score}</p>
+            <p>IP Reputation: ${
+              data.fraud_score >= 88
+                ? "High Risk"
+                : data.fraud_score >= 75
+                ? "Suspicious"
+                : "Low Risk"
+            }</p>
+
+            <p>Proxy/VPN Detection: ${
+              data.proxy ? "Proxy/VPN Detected" : "No Proxy/VPN Detected"
+            }</p>
+            <p>AbuseIPDB Blacklist Status: ${
+              abuseData.isPublic ? "Blacklisted" : "Not Blacklisted"
+            }</p>
+            <p>Abuse Confidence Score: ${abuseData.abuseConfidenceScore}</p>
+            <p>Times Reported: ${abuseData.totalReports}</p>
+        `;
+      }
+
+      async function lookupMX() {
+        const domain = document.getElementById("ip").value;
+        const url = `http://localhost:3000/mxtoolbox?domain=${domain}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML += `
+          <p>MX Toolbox DNS Details: ${JSON.stringify(data)}</p>
+        `;
+      }
+    </script>
+  </body>
+</html>
